@@ -1,12 +1,10 @@
 package controller;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import views.Form;
 import views.NaturalForm;
 
@@ -21,13 +19,13 @@ public class NaturalFormAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == naturalForm.btnCancel) {
+        if (e.getSource() == naturalForm.getBtnCancel()) {
             // Quay lại giao diện chính
             parentFrame.getContentPane().removeAll();
             new Form().showForm(parentFrame); // Hiển thị lại giao diện chính
             parentFrame.revalidate();
             parentFrame.repaint();
-        } else if (e.getSource() == naturalForm.btnSet) {
+        } else if (e.getSource() == naturalForm.getBtnSet()) {
             // Xử lý khi nhấn nút Set
             try {
                 // Lấy dữ liệu từ các trường nhập liệu
@@ -57,6 +55,9 @@ public class NaturalFormAction implements ActionListener {
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(parentFrame, "Vui lòng nhập điểm hợp lệ.");
             }
+        } else if (e.getSource() == naturalForm.getBtnGet()) {
+            // Xử lý khi nhấn nút Get
+            retrieveDataFromDatabase();
         }
     }
 
@@ -69,7 +70,6 @@ public class NaturalFormAction implements ActionListener {
             String username = "postgres"; // Thay bằng tên người dùng PostgreSQL của bạn
             String password = "dang123"; // Thay bằng mật khẩu của bạn
 
-            // Kết nối với cơ sở dữ liệu PostgreSQL
             conn = DriverManager.getConnection(url, username, password);
 
             // Câu lệnh SQL để chèn dữ liệu
@@ -90,6 +90,57 @@ public class NaturalFormAction implements ActionListener {
             JOptionPane.showMessageDialog(parentFrame, "Lỗi khi lưu vào cơ sở dữ liệu.");
         } finally {
             try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void retrieveDataFromDatabase() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            // Kết nối tới cơ sở dữ liệu PostgreSQL
+            String url = "jdbc:postgresql://localhost:5432/dbtest"; // Chỉnh sửa URL kết nối PostgreSQL
+            String username = "postgres"; // Thay bằng tên người dùng PostgreSQL của bạn
+            String password = "dang123"; // Thay bằng mật khẩu của bạn
+
+            conn = DriverManager.getConnection(url, username, password);
+
+            // Câu lệnh SQL để lấy dữ liệu từ bảng
+            String sql = "SELECT math, physics, chemistry, average FROM student_scores";
+            pstmt = conn.prepareStatement(sql);
+
+            rs = pstmt.executeQuery();
+
+            // Tạo mô hình bảng (TableModel) để chứa dữ liệu
+            DefaultTableModel tableModel = new DefaultTableModel();
+            tableModel.addColumn("Toán");
+            tableModel.addColumn("Lý");
+            tableModel.addColumn("Hóa");
+            tableModel.addColumn("Điểm Trung Bình");
+
+            // Duyệt qua kết quả trả về từ ResultSet và thêm vào mô hình bảng
+            while (rs.next()) {
+                double math = rs.getDouble("math");
+                double physics = rs.getDouble("physics");
+                double chemistry = rs.getDouble("chemistry");
+                double average = rs.getDouble("average");
+                tableModel.addRow(new Object[]{math, physics, chemistry, average});
+            }
+
+            // Hiển thị dữ liệu ra bảng
+            naturalForm.displayTable(tableModel);
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(parentFrame, "Lỗi khi lấy dữ liệu từ cơ sở dữ liệu.");
+        } finally {
+            try {
+                if (rs != null) rs.close();
                 if (pstmt != null) pstmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException ex) {

@@ -1,14 +1,19 @@
 package views;
 
 import javax.swing.*;
-import controller.NaturalFormAction;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
+
+import controller.NaturalFormAction;
 
 public class NaturalForm {
 
     private JFrame parentFrame;
     private JTextField mathField, physicsField, chemistryField;
-    public JButton btnCancel, btnSet; // Make buttons public
+    private JButton btnCancel, btnSet, btnGet;
+    private JTable table; // Bảng hiển thị dữ liệu
 
     public NaturalForm(JFrame frame) {
         this.parentFrame = frame;
@@ -22,7 +27,7 @@ public class NaturalForm {
         JLabel chemistryLabel = new JLabel("Hóa:");
 
         // Thiết lập font cho các label
-        Font labelFont = new Font("Arial", Font.BOLD, 24); // Kích thước font lớn hơn
+        Font labelFont = new Font("Arial", Font.BOLD, 18);
         mathLabel.setFont(labelFont);
         physicsLabel.setFont(labelFont);
         chemistryLabel.setFont(labelFont);
@@ -32,27 +37,26 @@ public class NaturalForm {
         physicsField = new JTextField();
         chemistryField = new JTextField();
 
-        // Tạo các button Cancel và Set
+        // Tạo các button Cancel, Set và Get
         btnCancel = new JButton("Cancel");
         btnSet = new JButton("Set Điều Kiện");
+        btnGet = new JButton("Get Data");
 
         // Thiết lập màu sắc cho button
         btnCancel.setBackground(Color.RED);
         btnCancel.setForeground(Color.WHITE);
         btnSet.setBackground(Color.GREEN);
         btnSet.setForeground(Color.BLACK);
-
-        // Thiết lập màu nền cho các text field
-        mathField.setBackground(Color.LIGHT_GRAY);
-        physicsField.setBackground(Color.LIGHT_GRAY);
-        chemistryField.setBackground(Color.LIGHT_GRAY);
+        btnGet.setBackground(Color.BLUE);
+        btnGet.setForeground(Color.WHITE);
 
         // Đặt kích thước cho button và text field
-        Dimension buttonSize = new Dimension(50, 50); // Kích thước cho button
+        Dimension buttonSize = new Dimension(100, 30);
         btnCancel.setPreferredSize(buttonSize);
         btnSet.setPreferredSize(buttonSize);
-        
-        Dimension textFieldSize = new Dimension(300, 50); // Kích thước cho text field
+        btnGet.setPreferredSize(buttonSize);
+
+        Dimension textFieldSize = new Dimension(200, 30);
         mathField.setPreferredSize(textFieldSize);
         physicsField.setPreferredSize(textFieldSize);
         chemistryField.setPreferredSize(textFieldSize);
@@ -61,7 +65,8 @@ public class NaturalForm {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Căn chỉnh theo chiều ngang
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Tạo panel để vẽ hình nền
         JPanel backgroundPanel = new JPanel() {
@@ -74,15 +79,16 @@ public class NaturalForm {
             }
         };
 
-        backgroundPanel.setLayout(new BorderLayout()); // Sử dụng BorderLayout
-        backgroundPanel.add(panel, BorderLayout.CENTER);
+        backgroundPanel.setLayout(new BorderLayout());
+        backgroundPanel.add(panel, BorderLayout.NORTH);
 
         // Đăng ký sự kiện cho các button
         NaturalFormAction actionListener = new NaturalFormAction(this, parentFrame);
         btnCancel.addActionListener(actionListener);
         btnSet.addActionListener(actionListener);
+        btnGet.addActionListener(actionListener);
 
-        // Adding components to the panel
+        // Thêm các thành phần vào panel
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(mathLabel, gbc);
@@ -104,22 +110,56 @@ public class NaturalForm {
         gbc.gridx = 1;
         panel.add(chemistryField, gbc);
 
+        // Thêm các button vào panel
         gbc.gridx = 0;
         gbc.gridy = 3;
-        gbc.gridwidth = 2; // Chiếm toàn bộ chiều rộng
         panel.add(btnCancel, gbc);
 
-        gbc.gridy = 4; // Xuống dòng mới
+        gbc.gridx = 1;
         panel.add(btnSet, gbc);
 
+        gbc.gridx = 2;
+        panel.add(btnGet, gbc);
+
         // Thay đổi nội dung của JFrame
-        parentFrame.getContentPane().removeAll(); // Xóa tất cả các thành phần hiện tại
-        parentFrame.add(backgroundPanel); // Thêm panel với hình nền
-        parentFrame.revalidate(); // Cập nhật lại frame
-        parentFrame.repaint(); // Vẽ lại frame
+        parentFrame.getContentPane().removeAll();
+        parentFrame.add(backgroundPanel);
+        parentFrame.revalidate();
+        parentFrame.repaint();
     }
 
-    // Getter methods for the text fields
+    // Phương thức để hiển thị dữ liệu từ database
+    public void displayTable(DefaultTableModel tableModel) {
+        if (table != null) {
+            parentFrame.remove(new JScrollPane(table)); // Xóa bảng cũ nếu có
+        }
+        
+        // Khởi tạo bảng mới với dữ liệu
+        table = new JTable(tableModel);
+        
+        // Thiết lập chiều rộng các cột
+        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Cột Toán
+        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Cột Lý
+        table.getColumnModel().getColumn(2).setPreferredWidth(100); // Cột Hóa
+        table.getColumnModel().getColumn(3).setPreferredWidth(150); // Cột Điểm Trung Bình
+
+        // Thiết lập kiểu cho các cột
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < tableModel.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // Thêm bảng vào JScrollPane để có thể cuộn
+        JScrollPane scrollPane = new JScrollPane(table); 
+        
+        // Thêm bảng vào giữa JFrame
+        parentFrame.add(scrollPane, BorderLayout.CENTER);
+        parentFrame.revalidate();
+        parentFrame.repaint();
+    }
+
+    // Getter cho các trường văn bản
     public JTextField getMathField() {
         return mathField;
     }
@@ -130,5 +170,18 @@ public class NaturalForm {
 
     public JTextField getChemistryField() {
         return chemistryField;
+    }
+
+    // Getter cho các button
+    public JButton getBtnCancel() {
+        return btnCancel;
+    }
+
+    public JButton getBtnSet() {
+        return btnSet;
+    }
+
+    public JButton getBtnGet() {
+        return btnGet;
     }
 }
