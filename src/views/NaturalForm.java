@@ -38,9 +38,9 @@ public class NaturalForm {
         chemistryField = new JTextField();
 
         // Tạo các button Cancel, Set và Get
-        btnCancel = new JButton("Cancel");
-        btnSet = new JButton("Set Điều Kiện");
-        btnGet = new JButton("Get Data");
+        btnCancel = new JButton("Hủy bỏ");
+        btnSet = new JButton("xét Điều Kiện");
+        btnGet = new JButton("Hiển thị");
 
         // Thiết lập màu sắc cho button
         btnCancel.setBackground(Color.RED);
@@ -74,7 +74,7 @@ public class NaturalForm {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 // Tải hình ảnh nền
-                ImageIcon background = new ImageIcon("src/assets/TN.jpg");
+                ImageIcon background = new ImageIcon("src/assets/BK1.jpg");
                 g.drawImage(background.getImage(), 0, 0, getWidth(), getHeight(), this);
             }
         };

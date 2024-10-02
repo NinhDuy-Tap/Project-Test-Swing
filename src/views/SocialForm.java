@@ -32,8 +32,8 @@ public class SocialForm {
         civicField = new JTextField();
 
         // Create Cancel and Set buttons
-        btnCancel = new JButton("Cancel");
-        btnSet = new JButton("Set Điều Kiện");
+        btnCancel = new JButton("Hủy bỏ");
+        btnSet = new JButton("xét điều Kiện");
 
         // Set button colors
         btnCancel.setBackground(Color.RED);

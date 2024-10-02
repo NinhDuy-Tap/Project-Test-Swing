@@ -37,10 +37,17 @@ public class NaturalFormAction implements ActionListener {
                 double averageNaturalScore = (mathScore + physicsScore + chemistryScore) / 3;
 
                 // Kiểm tra điều kiện môn tự nhiên
-                if (averageNaturalScore >= 6.5 && mathScore >= 6.5) {
+                if (averageNaturalScore >= 6.5 && 
+                    mathScore >= 6.5 && mathScore <= 10 && 
+                    physicsScore >= 0 && physicsScore <= 10 && 
+                    chemistryScore >= 0 && chemistryScore <= 10) {
+                    
                     JOptionPane.showMessageDialog(parentFrame, 
-                        "Điểm đã nhập:\nToán: " + mathScore + "\nLý: " + physicsScore + "\nHóa: " + chemistryScore + 
-                        "\nĐiểm trung bình các môn tự nhiên: " + averageNaturalScore + "\nKết quả: Đạt");
+                        "Điểm đã nhập:\nToán: " + mathScore + 
+                        "\nLý: " + physicsScore + 
+                        "\nHóa: " + chemistryScore + 
+                        "\nĐiểm trung bình các môn tự nhiên: " + averageNaturalScore + 
+                        "\nKết quả: Đạt");
 
                     // Lưu điểm vào cơ sở dữ liệu nếu đạt yêu cầu
                     saveToDatabase(mathScore, physicsScore, chemistryScore, averageNaturalScore);
@@ -48,6 +55,8 @@ public class NaturalFormAction implements ActionListener {
                     // Kiểm tra lý do không đạt
                     if (mathScore < 6.5) {
                         JOptionPane.showMessageDialog(parentFrame, "Điểm toán không đạt yêu cầu!");
+                    } else if (mathScore > 10 || physicsScore > 10 || chemistryScore > 10) {
+                        JOptionPane.showMessageDialog(parentFrame, "Điểm không được vượt quá 10!");
                     } else {
                         JOptionPane.showMessageDialog(parentFrame, "Điểm trung bình các môn tự nhiên không đạt yêu cầu!");
                     }
@@ -60,6 +69,7 @@ public class NaturalFormAction implements ActionListener {
             retrieveDataFromDatabase();
         }
     }
+
 
     private void saveToDatabase(double math, double physics, double chemistry, double average) {
         Connection conn = null;
@@ -118,9 +128,9 @@ public class NaturalFormAction implements ActionListener {
 
             // Tạo mô hình bảng (TableModel) để chứa dữ liệu
             DefaultTableModel tableModel = new DefaultTableModel();
-            tableModel.addColumn("Toán");
-            tableModel.addColumn("Lý");
-            tableModel.addColumn("Hóa");
+            tableModel.addColumn("Điểm Toán");
+            tableModel.addColumn("Điểm Lý");
+            tableModel.addColumn("Điểm Hóa");
             tableModel.addColumn("Điểm Trung Bình");
 
             // Duyệt qua kết quả trả về từ ResultSet và thêm vào mô hình bảng
@@ -148,4 +158,5 @@ public class NaturalFormAction implements ActionListener {
             }
         }
     }
+
 }
