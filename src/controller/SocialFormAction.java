@@ -1,12 +1,16 @@
 package controller;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import views.Form;
 import views.SocialForm;
 
@@ -39,7 +43,10 @@ public class SocialFormAction implements ActionListener {
                 double averageSocialScore = (geographyScore + historyScore + civicScore) / 3;
 
                 // Kiểm tra điều kiện môn xã hội
-                if (averageSocialScore >= 6.5 && civicScore >= 6.5 ) {
+                if (averageSocialScore >= 6.5 && civicScore >= 6.5
+                		&& civicScore <=10 && historyScore >=0 && historyScore <=10
+                		&& geographyScore >=0 && geographyScore<=10) {
+                	
                     JOptionPane.showMessageDialog(parentFrame, 
                         "Điểm đã nhập:\nĐịa Lý: " + geographyScore + 
                         "\nLịch Sử: " + historyScore + 
@@ -53,17 +60,80 @@ public class SocialFormAction implements ActionListener {
                     // Kiểm tra lý do không đạt
                     if (civicScore < 6.5) {
                         JOptionPane.showMessageDialog(parentFrame, "Điểm GDCD không đạt yêu cầu!");
-                    } else {
+                        
+                    } else if (civicScore > 10 || historyScore > 10 || geographyScore > 10) {
+                        JOptionPane.showMessageDialog(parentFrame, "Điểm không được vượt quá 10!");
+                    } 
+                    
+                    else {
                         JOptionPane.showMessageDialog(parentFrame, "Điểm trung bình các môn xã hội không đạt yêu cầu!");
                     }
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(parentFrame, "Vui lòng nhập điểm hợp lệ.");
             }
+        } else if (e.getSource() ==  socialForm.getBtnGet()) {
+            // Xử lý khi nhấn nút Get
+          getDataFromDatabase();
+        	
+        	
         }
     }
 
-    private void saveToDatabase(double geography, double history, double civic, double average) {
+    private void getDataFromDatabase() {
+    	
+    	 Connection conn = null;
+         PreparedStatement pstmt = null;
+         ResultSet rs = null;
+         try {
+             // Kết nối tới cơ sở dữ liệu PostgreSQL
+             String url = "jdbc:postgresql://localhost:5432/dbtest"; // Chỉnh sửa URL kết nối PostgreSQL
+             String username = "postgres"; // Thay bằng tên người dùng PostgreSQL của bạn
+             String password = "dang123"; // Thay bằng mật khẩu của bạn
+
+             conn = DriverManager.getConnection(url, username, password);
+
+             // Câu lệnh SQL để lấy dữ liệu từ bảng
+             String sql = "SELECT geography, history, civic, average FROM social";
+             pstmt = conn.prepareStatement(sql);
+
+             rs = pstmt.executeQuery();
+
+             // Tạo mô hình bảng (TableModel) để chứa dữ liệu
+             DefaultTableModel tableModel = new DefaultTableModel();
+             tableModel.addColumn("Điểm Địa lý ");
+             tableModel.addColumn("Điểm Lịch sử ");
+             tableModel.addColumn("Điểm công dân");
+             tableModel.addColumn("Điểm Trung Bình");
+
+             // Duyệt qua kết quả trả về từ ResultSet và thêm vào mô hình bảng
+             while (rs.next()) {
+                 double geography = rs.getDouble("geopraphy");
+                 double history = rs.getDouble("hisory");
+                 double civic = rs.getDouble("civic");
+                 double average = rs.getDouble("average");
+                 tableModel.addRow(new Object[]{geography, history, civic, average});
+             }
+
+             socialForm.displayTable(tableModel);
+
+         } catch (SQLException ex) {
+             ex.printStackTrace();
+             JOptionPane.showMessageDialog(parentFrame, "Lỗi khi lấy dữ liệu từ cơ sở dữ liệu.");
+         } finally {
+             try {
+                 if (rs != null) rs.close();
+                 if (pstmt != null) pstmt.close();
+                 if (conn != null) conn.close();
+             } catch (SQLException ex) {
+                 ex.printStackTrace();
+             }
+         }
+     }
+    
+    	
+
+	private void saveToDatabase(double geography, double history, double civic, double average) {
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
